@@ -159,23 +159,6 @@ Dimensión que consolida todos los indicadores de riesgo, escalamientos y estado
 | StatusMatch | Coincidencia status partner/interno | BIT |
 | ManuallySetLive | Estado Live establecido manualmente | BIT |
 
-## Objetivos Analíticos
-
-El datamart está diseñado para responder preguntas de negocio como:
-
-- ¿Cuál es la distribución de proyectos por estado y región?
-- ¿Qué áreas de solución tienen mayor adopción por industria?
-- ¿Cuáles son los tiempos promedio de implementación por tipo de proyecto?
-- ¿Qué partners tienen mejor rendimiento en términos de cumplimiento de fechas?
-- ¿Cómo se distribuyen los riesgos y escalamientos por fase del proyecto?
-
-## Consideraciones Técnicas
-
-- Modelo optimizado para consultas analíticas OLAP
-- Implementación recomendada en SQL Server con índices columnstore
-- Actualizaciones incrementales mediante procesos ETL programados
-- Soporte para herramientas de visualización como Power BI y Tableau
-
-## Contribución
-
-Este modelo está en constante evolución para adaptarse a nuevos requerimientos analíticos y cambios en los procesos de negocio SAP.
+## Integrantes:
+- Francesco Ernesto Carlevarino Diaz
+- Jhoan Leandro Vargas Collas
