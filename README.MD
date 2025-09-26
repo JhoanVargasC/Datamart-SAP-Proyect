@@ -6,11 +6,11 @@ Este repositorio contiene la implementación de un datamart dimensional para el 
 
 ## Arquitectura del Modelo Dimensional
 
-### Tabla de Hechos (Fact Table)
+### Fact Table
 
 **Fact_Proyectos**: Tabla central que contiene las métricas y medidas cuantificables relacionadas con los proyectos SAP.
 
-**Métricas Principales:**
+**Métricas:**
 - Número de proyectos por estado
 - Tiempo de implementación (duración entre Contract Start y Contract End)
 - Indicadores de retraso (diferencias entre fechas planificadas y confirmadas)
