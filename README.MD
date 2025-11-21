@@ -1,164 +1,161 @@
 # Datamart Proyectos SAP - Modelo Dimensional
 
-## Descripción del Proyecto
+## Problema de Negocio
 
-Este repositorio contiene la implementación de un datamart dimensional para el análisis y seguimiento de proyectos de implementación SAP. El modelo está diseñado para proporcionar una vista analítica integral que permita evaluar el rendimiento, estado y métricas clave de los proyectos de transformación empresarial.
+Las organizaciones que gestionan portafolios de implementación SAP carecen de visibilidad centralizada sobre el estado real de sus proyectos. La información dispersa entre múltiples fuentes impide:
+
+- **Detectar tempranamente desvíos temporales** entre fechas planificadas.
+- **Identificar patrones de riesgo** por región, industria, partner o fase del proyecto
+- **Medir cumplimiento contractual** y duración efectiva de implementaciones
+- **Evaluar rendimiento de partners** y distribución de cartera
+- **Analizar puntos de estancamiento** en fases críticas de la metodología SAP Activate
+
+Este datamart consolida métricas de proyectos, clientes, soluciones, waves y partners en un modelo dimensional que habilita seguimiento proactivo y toma de decisiones basada en datos.
+
+## Objetivo
+
+Proporcionar una plataforma analítica que permita:
+- Monitorear estados y fases de proyectos SAP 
+- Identificar cuellos de botella y paradas en el ciclo de implementación
+- Analizar desvíos temporales y cumplimiento de hitos contractuales
+- Evaluar rendimiento por dimensiones clave (región, industria, partner, solución)
+- Generar alertas tempranas basadas en indicadores de riesgo
+
+## Solución Implementada
+
+### **view_paradas.py** - Análisis de Paradas en Ciclo de Vida
+Dashboard que identifica estancamientos en fases del proyecto (Kickoff, Prepare, Explore, Realize, Deploy). Visualiza:
+- Proyectos sin avance de fase por período prolongado
+- Distribución de proyectos por CurrentActivatePhase
+- Tiempo promedio en cada fase vs. benchmark
+- Cuellos de botella por industria/región/partner
+
+**Valor:** Detecta ineficiencias operativas y permite reasignación proactiva de recursos.
+
+### **view_retrasos.py** - Monitoreo de Desvíos Temporales
+Sistema de análisis de brechas entre PlannedGoLive y ConfirmedGoLive. Muestra:
+- Indicadores de retraso (IndicadorRetraso) y días acumulados (DiasRetraso)
+- Distribución de retrasos por WaveStatus, Industry y MainPartner
+- Correlación entre EscalationLevel y magnitud de desvío
+- Tendencias temporales de cumplimiento
+
+**Valor:** Identifica causas recurrentes de retrasos y facilita acciones correctivas preventivas.
 
 ## Arquitectura del Modelo Dimensional
 
-### Fact Table
+### **Fact_Proyectos** - Tabla de Hechos
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| ProjectID | PK - Identificador único | INT |
+| WaveID | FK - Ola de despliegue | INT |
+| CustomerID | FK - Cliente | INT |
+| DateKey | FK - Dimensión tiempo | INT |
+| DuracionProyecto | Días (ContractEnd - ContractStart) | INT |
+| IndicadorRetraso | Retraso en go-live (0/1) | BIT |
+| DiasRetraso | Días vs. PlannedGoLive | INT |
 
-**Fact_Proyectos**: Tabla central que contiene las métricas y medidas cuantificables relacionadas con los proyectos SAP.
+### **Dim_Proyecto**
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| ProjectID | PK | INT |
+| ProjectName | Nombre oficial | NVARCHAR(255) |
+| ProjectStatus | Estado actual | NVARCHAR(50) |
+| CurrentActivatePhase | Fase SAP Activate | NVARCHAR(50) |
+| ExecutiveSummary | Resumen ejecutivo | NVARCHAR(MAX) |
+| SolutionScope | Alcance funcional | NVARCHAR(500) |
+| Validated | Validación SAP | BIT |
+| StrategicDeployment | Despliegue estratégico | BIT |
 
-**Métricas:**
-- Número de proyectos por estado
-- Tiempo de implementación (duración entre Contract Start y Contract End)
-- Indicadores de retraso (diferencias entre fechas planificadas y confirmadas)
-- Distribución de proyectos por región, industria y área de solución
-- Indicadores de cumplimiento contractual
+### **Dim_Tiempo**
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| DateKey | PK | INT |
+| ContractSigned | Firma contrato | DATE |
+| ContractStart | Inicio contrato | DATE |
+| ContractEnd | Fin planificado | DATE |
+| KickoffDate | Reunión inicio | DATE |
+| PlannedGoLive | Go-live planificado | DATE |
+| ConfirmedGoLive | Go-live confirmado | DATE |
+| Año / Trimestre / Mes | Jerarquía temporal | INT |
 
-### Dimensiones del Modelo
+### **Dim_Cliente**
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| CustomerID | PK | INT |
+| Customer | Razón social | NVARCHAR(255) |
+| CustomerRegion | Región comercial | NVARCHAR(50) |
+| Country / CountryCode | País ISO | NVARCHAR(100) |
+| MarketUnit | Unidad de mercado | NVARCHAR(100) |
+| GrowWithSAPScaleups | Programa Grow with SAP | BIT |
 
-#### 1. Dim_Proyecto
-Contiene la información descriptiva básica de cada proyecto, incluyendo identificadores únicos, nomenclatura oficial, estado actual dentro del ciclo de vida del proyecto y resumen ejecutivo que contextualiza el alcance y objetivos estratégicos.
+### **Dim_Solución**
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| SolutionID | PK | INT |
+| SolutionArea | Área nivel 1 | NVARCHAR(100) |
+| SubSolutionArea | Subárea | NVARCHAR(100) |
+| SolutionAreaL3/L4 | Niveles 3 y 4 | NVARCHAR(100) |
+| LogicalProduct | Producto lógico | NVARCHAR(100) |
+| SAPCloudALM / IntelligentEnterpriseBTP | Indicadores adicionales | BIT |
 
-#### 2. Dim_Tiempo
-Dimensión temporal que registra todas las fechas críticas del ciclo de vida del proyecto, desde la firma contractual hasta la puesta en producción, permitiendo análisis temporales y seguimiento de hitos clave en la metodología SAP Activate.
+### **Dim_Wave**
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| WaveID | PK | INT |
+| WaveName | Nombre descriptivo | NVARCHAR(255) |
+| WaveStage | Etapa operativa | NVARCHAR(100) |
+| WaveStatus | Semáforo estado | NVARCHAR(20) |
+| RISEEntitlement / RISECore / SOLEX / CAPP | Indicadores programas | BIT |
+| RolloutCountries | Países despliegue | NVARCHAR(MAX) |
 
-#### 3. Dim_Cliente
-Agrupa la información del cliente incluyendo identificación corporativa, segmentación geográfica y clasificación por unidades de mercado, facilitando análisis por perfiles de cliente y distribución geográfica de la cartera de proyectos.
+### **Dim_Partner**
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| PartnerID | PK | INT |
+| MainPartner / MainPartnerID | Socio principal | NVARCHAR(255) |
+| WavePartners / WavePartnerIDs | Partners adicionales | NVARCHAR(MAX) |
+| LastChangedByPartner | Último cambio por partner | BIT |
 
-#### 4. Dim_Solución
-Categoriza las áreas de solución SAP implementadas, organizadas jerárquicamente desde el nivel más general hasta los productos lógicos específicos, permitiendo análisis de adopción tecnológica y especialización por líneas de producto.
-
-#### 5. Dim_Wave
-Gestiona la información de las oleadas de despliegue, que representan agrupaciones lógicas de proyectos con características similares o cronología coordinada, incluyendo su estado operativo y fase de ejecución.
-
-#### 6. Dim_Partner
-Registra la información de los socios estratégicos y colaboradores involucrados en la ejecución de proyectos, tanto principales como secundarios, permitiendo análisis de rendimiento y distribución de cartera por canal de partners.
-
-#### 7. Dim_Industria
-Clasifica los proyectos según la industria del cliente, arquetipos de implementación y clasificaciones internas de Customer Success, facilitando análisis sectoriales y estrategias de specialización vertical.
-
-#### 8. Dim_Riesgo_Estado
-Dimensión que consolida todos los indicadores de riesgo, escalamientos y estados operativos tanto internos como reportados por partners, proporcionando una vista integral de la salud del proyecto y alertas tempranas.
-
-## Diccionario de Datos
-
-### Tabla de Hechos - Fact_Proyectos
-
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| ProjectID | Clave primaria - Identificador único del proyecto | INT |
-| WaveID | Clave foránea - Identificador de la ola de despliegue | INT |
-| CustomerID | Clave foránea - Identificador único del cliente | INT |
-| DateKey | Clave foránea - Referencia a dimensión tiempo | INT |
-| DuracionProyecto | Duración en días del proyecto (Contract End - Contract Start) | INT |
-| IndicadorRetraso | Indicador binario de retraso en go-live | BIT |
-| DiasRetraso | Días de retraso respecto a fecha planificada | INT |
-
-### Dimensión Proyecto - Dim_Proyecto
-
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| ProjectID | Clave primaria - Identificador único del proyecto | INT |
-| ProjectName | Nombre oficial del proyecto | NVARCHAR(255) |
-| ProjectStatus | Estado actual del proyecto | NVARCHAR(50) |
-| CurrentActivatePhase | Fase actual metodología SAP Activate | NVARCHAR(50) |
-| ExecutiveSummary | Resumen ejecutivo del proyecto | NVARCHAR(MAX) |
-| ProjectContractEnded | Indicador si el proyecto ha finalizado contractualmente | BIT |
-| SolutionScope | Alcance funcional de la solución | NVARCHAR(500) |
-| Validated | Indicador de validación por SAP | BIT |
-| StrategicDeployment | Indicador de despliegue estratégico | BIT |
-
-### Dimensión Tiempo - Dim_Tiempo
-
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| DateKey | Clave primaria - Identificador único de fecha | INT |
-| ContractSigned | Fecha de firma del contrato | DATE |
-| ContractStart | Fecha de inicio del contrato | DATE |
-| ContractEnd | Fecha de fin planificada del contrato | DATE |
-| ContractEnded | Indicador si el contrato está finalizado | BIT |
-| KickoffDate | Fecha de reunión de inicio del proyecto | DATE |
-| PlannedGoLive | Fecha planificada de go-live | DATE |
-| ConfirmedGoLive | Fecha confirmada de go-live | DATE |
-| Año | Año de la fecha | INT |
-| Mes | Mes de la fecha | INT |
-| Trimestre | Trimestre de la fecha | INT |
-
-### Dimensión Cliente - Dim_Cliente
-
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| CustomerID | Clave primaria - Identificador único del cliente | INT |
-| Customer | Razón social del cliente | NVARCHAR(255) |
-| CustomerRegion | Región comercial del cliente | NVARCHAR(50) |
-| Country | País principal de operación | NVARCHAR(100) |
-| CountryCode | Código ISO del país | NVARCHAR(10) |
-| MarketUnit | Unidad de mercado específica | NVARCHAR(100) |
-| GrowWithSAPScaleups | Indicador programa Grow with SAP | BIT |
-
-### Dimensión Solución - Dim_Solución
-
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| SolutionID | Clave primaria - Identificador único de solución | INT |
-| SolutionArea | Área de solución SAP nivel 1 | NVARCHAR(100) |
-| SubSolutionArea | Subárea de solución SAP | NVARCHAR(100) |
-| SolutionAreaL3 | Nivel 3 de categorización | NVARCHAR(100) |
-| SolutionAreaL4 | Nivel 4 de categorización | NVARCHAR(100) |
-| LogicalProduct | Producto lógico asociado | NVARCHAR(100) |
-| SAPCloudALM | Indicador uso SAP Cloud ALM | BIT |
-| IntelligentEnterpriseBTP | Indicador servicios BTP complementarios | BIT |
-
-### Dimensión Wave - Dim_Wave
-
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| WaveID | Clave primaria - Identificador único de ola | INT |
-| WaveName | Nombre descriptivo de la ola | NVARCHAR(255) |
-| WaveStage | Etapa operativa de la ola | NVARCHAR(100) |
-| WaveStatus | Semáforo de estado de la ola | NVARCHAR(20) |
-| RISEEntitlement | Indicador derechos RISE | BIT |
-| RISECore | Indicador RISE Core | BIT |
-| SOLEX | Indicador programas SOLEX | BIT |
-| CAPP | Indicador participación CAPP | BIT |
-| RolloutCountries | Países contemplados para despliegue | NVARCHAR(MAX) |
-
-### Dimensión Partner - Dim_Partner
-
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| PartnerID | Clave primaria - Identificador único de partner | INT |
-| MainPartner | Socio principal del proyecto | NVARCHAR(255) |
-| MainPartnerID | Identificador del partner principal | NVARCHAR(50) |
-| WavePartners | Lista de partners de la ola | NVARCHAR(MAX) |
-| WavePartnerIDs | Identificadores de partners de ola | NVARCHAR(MAX) |
-| LastChangedByPartner | Indicador último cambio por partner | BIT |
-
-### Dimensión Industria - Dim_Industria
-
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| IndustryID | Clave primaria - Identificador único de industria | INT |
-| Industry | Industria según categorización SAP | NVARCHAR(100) |
-| ISS | Código segmentación industria/solución | NVARCHAR(50) |
-| Archetype | Arquetipo del cliente o despliegue | NVARCHAR(100) |
-| SubArchetype | Subarquetipo del despliegue | NVARCHAR(100) |
+### **Dim_Industria**
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| IndustryID | PK | INT |
+| Industry | Categorización SAP | NVARCHAR(100) |
+| ISS | Código segmentación | NVARCHAR(50) |
+| Archetype / SubArchetype | Arquetipo despliegue | NVARCHAR(100) |
 | CSClassification | Clasificación Customer Success | NVARCHAR(100) |
 
-### Dimensión Riesgo Estado - Dim_Riesgo_Estado
+### **Dim_Riesgo_Estado**
+| Campo | Descripción | Tipo |
+|-------|-------------|------|
+| RiskStatusID | PK | INT |
+| EscalationLevel | Nivel escalamiento | INT |
+| StatusReason | Motivo estado | NVARCHAR(500) |
+| WavePartnerStatus | Semáforo partner | NVARCHAR(20) |
+| StatusMatch | Coincidencia status | BIT |
+| ManuallySetLive | Estado Live manual | BIT |
 
-| Campo | Descripción | Tipo de Dato SQL Server |
-|-------|-------------|------------------------|
-| RiskStatusID | Clave primaria - Identificador único | INT |
-| EscalationLevel | Nivel de escalamiento activo | INT |
-| StatusReason | Motivo del estado actual | NVARCHAR(500) |
-| WavePartnerStatus | Semáforo reportado por partner | NVARCHAR(20) |
-| StatusMatch | Coincidencia status partner/interno | BIT |
-| ManuallySetLive | Estado Live establecido manualmente | BIT |
+## KPIs Principales
 
-## Integrantes:
-- Francesco Ernesto Carlevarino Diaz
-- Jhoan Leandro Vargas Collas
+1. **Tasa de Cumplimiento Temporal**: % proyectos sin retraso (IndicadorRetraso = 0)
+2. **Duración Media por Industria**: Benchmark de DuracionProyecto por Industry
+3. **Índice de Estancamiento**: Proyectos > 90 días en misma CurrentActivatePhase
+4. **Rendimiento de Partners**: DiasRetraso promedio por MainPartner
+5. **Nivel de Riesgo Crítico**: Proyectos con EscalationLevel ≥ 3
+
+## Estructura del Repositorio
+
+```
+├── README.md                  # Este documento
+├── datamart_diagram.md        # Diagrama del modelo dimensional
+├── app.py                     # Aplicación principal
+├── etl_manager.py            # Gestión de procesos ETL
+├── view_paradas.py           # Dashboard análisis de paradas
+├── view_retrasos.py          # Dashboard análisis de retrasos
+└── requirements.txt          # Dependencias del proyecto
+```
+
+---
+
+**Integrantes:**  
+Francesco Ernesto Carlevarino Diaz | Jhoan Leandro Vargas Collas
