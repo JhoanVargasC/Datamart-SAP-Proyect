@@ -135,14 +135,6 @@ Sistema de análisis de brechas entre PlannedGoLive y ConfirmedGoLive. Muestra:
 | StatusMatch | Coincidencia status | BIT |
 | ManuallySetLive | Estado Live manual | BIT |
 
-## KPIs Principales
-
-1. **Tasa de Cumplimiento Temporal**: % proyectos sin retraso (IndicadorRetraso = 0)
-2. **Duración Media por Industria**: Benchmark de DuracionProyecto por Industry
-3. **Índice de Estancamiento**: Proyectos > 90 días en misma CurrentActivatePhase
-4. **Rendimiento de Partners**: DiasRetraso promedio por MainPartner
-5. **Nivel de Riesgo Crítico**: Proyectos con EscalationLevel ≥ 3
-
 ## Estructura del Repositorio
 
 ```
