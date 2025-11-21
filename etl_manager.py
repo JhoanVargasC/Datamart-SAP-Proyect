@@ -5,21 +5,41 @@ ETL Manager for SAP Projects Exception Dashboard
 - Includes exception filtering and summary metrics
 - Error handling and Streamlit cache support
 """
+
 import sqlite3
 import pandas as pd
 import streamlit as st
+import os
+import requests
+
+def download_db_from_gdrive(local_path: str):
+    """
+    Descarga el archivo de base de datos desde Google Drive si no existe localmente.
+    Args:
+        local_path (str): Ruta local donde guardar el archivo.
+    """
+    file_id = "1McjYOomGSm8Emtsld_eXsNDYBMPvmt0U"  # ID extraído del enlace de Google Drive
+    gdrive_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    if not os.path.exists(local_path):
+        print("Descargando base de datos desde Google Drive...")
+        response = requests.get(gdrive_url)
+        with open(local_path, "wb") as f:
+            f.write(response.content)
+        print("Descarga completada.")
+
 
 
 def get_connection(db_path: str):
     """
-    Establish a connection to the SQLite database.
+    Establece conexión con la base de datos SQLite, descargándola de Google Drive si es necesario.
     Args:
-        db_path (str): Path to the SQLite database file.
+        db_path (str): Ruta local de la base de datos.
     Returns:
-        sqlite3.Connection: SQLite connection object.
+        sqlite3.Connection: Objeto de conexión SQLite.
     Raises:
-        sqlite3.Error: If connection fails.
+        sqlite3.Error: Si la conexión falla.
     """
+    download_db_from_gdrive(db_path)
     try:
         conn = sqlite3.connect(db_path)
         return conn
