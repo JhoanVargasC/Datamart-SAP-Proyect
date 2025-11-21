@@ -2,15 +2,12 @@
 
 ## Problema de Negocio
 
-Las organizaciones que gestionan portafolios de implementación SAP carecen de visibilidad centralizada sobre el estado real de sus proyectos. La información dispersa entre múltiples fuentes impide:
+El equipo que gestionan un portafolio de proyectos de implementación SAP enfrentan una falta de visibilidad centralizada sobre el estado real de sus iniciativas. La información se encuentra distribuida en múltiples fuentes, lo que dificulta:
 
-- **Detectar tempranamente desvíos temporales** entre fechas planificadas.
-- **Identificar patrones de riesgo** por región, industria, partner o fase del proyecto
-- **Medir cumplimiento contractual** y duración efectiva de implementaciones
-- **Evaluar rendimiento de partners** y distribución de cartera
-- **Analizar puntos de estancamiento** en fases críticas de la metodología SAP Activate
+- Detectar de manera temprana los retrasos entre las fechas planificadas y las fechas confirmadas.
+- Identificar patrones de riesgo según región, industria, partner o fase del proyecto.
 
-Este datamart consolida métricas de proyectos, clientes, soluciones, waves y partners en un modelo dimensional que habilita seguimiento proactivo y toma de decisiones basada en datos.
+Consecuencia principal: La falta de una vista integrada limita la capacidad de toma de decisiones, incrementa el riesgo de retrasos y reduce la eficiencia en la gestión del portafolio SAP.
 
 ## Objetivo
 
